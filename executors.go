@@ -63,9 +63,11 @@ func worker(id string, work <-chan call) {
 		if val, err := safelyCall(c.callable); err == nil {
 			c.future.setVal(val)
 		} else {
-			// TODO - better error handling! As it is, invoking 'Get()'
-			//        on the future will now return nil
-			c.future.cancel()
+			// Setting the futures value to any error will cause
+			// the 'Get()' method to return that value in err,
+			// thus relaying info about the unhandled error in
+			// the passed Callable.
+			c.future.setVal(err)
 		}
 	}
 	log.Printf("[%s] Shutting down...", myid)

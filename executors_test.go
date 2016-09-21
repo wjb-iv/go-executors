@@ -138,11 +138,10 @@ func TestCallablePanic(t *testing.T) {
 
 	callable := CallablePanic{}
 	f := exec.Invoke(callable)
-	if res, err := f.Get(time.Second); err == nil {
-		log.Printf("[TestCallablePanic] %s - %d ", time.Now(), res)
-		if res != nil {
-			t.Error("Result is expected to be 'nil' if callable panics!")
-		}
+	if _, err := f.Get(time.Second); err == nil {
+		t.Error("Error must not be nil")
+	} else {
+		log.Printf("[TestCallablePanic] got error %s - %v ", time.Now(), err)
 	}
 
 	callable2 := TestCallable{"Job1", 100}

@@ -7,9 +7,8 @@ import (
 
 // Future - represents the results of some work to perform in a worker
 type Future struct {
-	waitGrp   *sync.WaitGroup // internal use (to wait gracefully)
-	value     interface{}     // the actual return value
-	cancelled bool
+	waitGrp *sync.WaitGroup // internal use (to wait gracefully)
+	value   interface{}     // the actual return value
 }
 
 // TimeoutError happens if the timeout expires on 'Get' method
@@ -21,7 +20,7 @@ func (te TimeoutError) Error() string {
 }
 
 // Get returns the value or times out after 'timeout' duration
-func (f *Future) Get(timeout time.Duration) (interface{}, error) {
+func (f *Future) Get(timeout time.Duration) (val interface{}, err error) {
 	c := make(chan struct{})
 	go func() {
 		defer close(c)
@@ -34,25 +33,22 @@ func (f *Future) Get(timeout time.Duration) (interface{}, error) {
 	}()
 	select {
 	case <-c:
-		return f.value, nil
+		if ex, ok := f.value.(error); ok {
+			val = nil
+			err = ex
+		} else {
+			val = f.value
+			err = nil
+		}
 	case <-time.After(timeout):
-		return nil, TimeoutError{}
+		val = nil
+		err = TimeoutError{}
 	}
+	return val, err
 }
 
 // Private setter called by worker to signal completion
 func (f *Future) setVal(val interface{}) {
-	if f.cancelled {
-		return
-	}
 	f.value = val
 	f.waitGrp.Done()
-}
-
-// Private cancel to clean up waitgroup is error happens
-func (f *Future) cancel() {
-	if !f.cancelled {
-		f.cancelled = true
-		f.waitGrp.Done()
-	}
 }
