@@ -12,7 +12,7 @@ To try and capture this behavior while minimizing the use of channels. It turns 
 
 ## Usage
 
-Create an executor service with 3 workers and a 25 item queue ensure that once your done with the service you close it (to close channels and shut down worker go routines):
+Create an executor service with 3 workers and a 25 item queue. Ensure that once your done with the service you close it (to close channels and shut down worker go routines):
 ```go
 exec := executors.New("my-go-pool", 3, 25)
 defer exec.Close()
